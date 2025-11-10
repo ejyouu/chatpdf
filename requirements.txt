@@ -1,0 +1,12 @@
+streamlit
+langchain
+langchain-community
+langchain-openai
+langchain-chroma
+langchain-text-splitters
+langchainhub
+pypdf
+chromadb
+streamlit-extras
+openai
+pysqlite3-binary

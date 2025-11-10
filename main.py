@@ -23,6 +23,9 @@ load_dotenv()
 st.title("ChatPDF")
 st.write("---")
 
+#OpenAI 키 입력받기
+openai_key = st.text_input("OPEN_AI_API_KEY",type="password")
+
 #파일 업로드
 uploaded_file = st.file_uploader("Choose a file", type="pdf")
 st.write("---")
@@ -58,6 +61,7 @@ if uploaded_file is not None:
     #Embedding
     embeddings_model = OpenAIEmbeddings(
         model="text-embedding-3-large",
+        openai_api_key=openai_key
     )
 
     #Chroma DB

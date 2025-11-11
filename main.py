@@ -97,7 +97,7 @@ if uploaded_file is not None:
             def format_docs(docs):
                 return "\n\n".join(doc.page_content for doc in docs)
             rag_chain = (
-                {"content": retriever_from_llm | format_docs, "question":
+                {"context": retriever_from_llm | format_docs, "question":
                  RunnablePassthrough()}
                  | prompt
                  | generate_llm

@@ -16,6 +16,7 @@ import os
 from langchain_classic.retrievers import MultiQueryRetriever
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.callbacks import BaseCallbackHandler
 
 load_dotenv()
 
@@ -67,6 +68,15 @@ if uploaded_file is not None:
     #Chroma DB
     db = Chroma.from_documents(texts, embeddings_model)
 
+    #스트리밍 처리할 Handler 생성
+    class StreamHandler(BaseCallbackHandler):
+        def __init__(self, container, initial_text=""):
+            self.container = container
+            self.text = initial_text
+        def on_llm_new_token(self, token: str, **kwargs) ->None:
+            self.text+=token
+            self.container.markdown(self.text)
+
     if st.button("질문하기"):
         with st.spinner("Wait for it..."):
             #Retriever
@@ -79,16 +89,22 @@ if uploaded_file is not None:
             prompt = hub.pull("rlm/rag-prompt")
 
             #Generate
+            chat_box = st.empty()
+            stream_handler = StreamHandler(chat_box)
+            generate_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0,
+                                       openai_api_key=openai_key, streaming=True, 
+                                       callbacks=stream_handler)
             def format_docs(docs):
                 return "\n\n".join(doc.page_content for doc in docs)
             rag_chain = (
-                {"context": retriever_from_llm | format_docs, "question": RunnablePassthrough()}
-                | prompt
-                | llm
-                | StrOutputParser()
+                {"content": retriever_from_llm | format_docs, "question":
+                 RunnablePassthrough()}
+                 | prompt
+                 | generate_llm
+                 | StrOutputParser()
             )
+            
 
             #Question
             result =  rag_chain.invoke(question)
-            st.write(result)
 
